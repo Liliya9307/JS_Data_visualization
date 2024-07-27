@@ -4,42 +4,13 @@
     <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Mutual Funds Bar Chart</title>
+            <link rel="stylesheet" href="style.css">
             <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
             <script src="https://d3js.org/d3.v6.min.js"></script>
-            <style>
-                    body {
-                        font-family: 'Times New Roman', serif;
-                        text-align: center;
-                    }
-                    h1 {
-                        margin-bottom: 20px;
-                    }
-                    .button {
-                        display: inline-block;
-                        padding: 10px 20px;
-                        margin: 10px;
-                        text-decoration: none;
-                        color: black;
-                        background-color: #D8A8D8;
-                        border-radius: 5px;
-                        border: none;
-                        font-size: 16px;
-                        cursor: pointer;
-                    }
-                    .button:hover {
-                        background-color: #0056b3;
-                    }
-                canvas {
-                    margin-top: 20px;
-                    width: 600px !important;
-                    height: 500px !important;
-                }
-
-
-            </style>
 </head>
 <h1> Mutual Funds Bar chart </h1>
 <a href="index.html" class="button"> Home </a>
+<h4 style="text-align: left;"> The Mutual Funds Bar Chart displays the distribution of net assets across different fund categories. This visualization enables users to easily identify which fund categories have the most and least contribution in terms of net assets. </h4>
 <body>
     <canvas id="myChart" width="300" height="300"></canvas>
     <script>

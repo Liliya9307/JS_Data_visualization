@@ -1,114 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Cereal Chart</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cereal Scatter Plot</title>
+    <link rel="stylesheet" href="style.css">
     <style>
-        body {
-            font-family: 'Times New Roman', serif;
+        .dot {
+            stroke: #000;
+            stroke-width: 1px;
+        }
+        .tooltip {
+            position: absolute;
             text-align: center;
+            padding: 5px;
+            font-size: 12px;
+            background: lightgrey;
+            border: 1px solid #333;
+            border-radius: 3px;
+            pointer-events: none;
+            opacity: 0;
         }
-        h1 {
-            margin-bottom: 20px;
+        .grid line {
+            stroke: #ddd;
+            stroke-width: 0.5px;
         }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 10px;
-            text-decoration: none;
-            color: black;
-            background-color: #D8A8D8;
-            border-radius: 5px;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
+        .axis path,
+        .axis line {
+            fill: none;
+            shape-rendering: crispEdges;
         }
-        .button:hover {
-            background-color: #0056b3;
-        }
-        canvas {
-            margin-top: 20px;
-            width: 700px !important;
-            height: 500px !important;
+        .axis-label {
+            font-size: 14px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <h1>Cereal Chart</h1>
+    <h1>Cereal Scatter Plot Chart</h1>
     <a href="index.html" class="button">Home</a>
+    <h4 style="text-align: left;">The Scatter Plot visualization of cereals displays the healthiness of different cereal brands by showing their sugar and calorie content. It provides a visual understanding of which cereals have high or low sugar amounts in relation to their calorie content. Each cereal is represented by a unique color, and interactive navigation reveals more detailed information about each cereal. </h4>
+    <div id="scatter-plot"></div>
+    <div class="tooltip"></div>
 
-    <canvas id="scatterPlot" width="600" height="400"></canvas>
-
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <script>
-        // Load the CSV file and create the scatter plot
-        fetch('data/cereals.csv')
-            .then(response => response.text())
-            .then(csvText => {
-                Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function (results) {
-                        createScatterPlot(results.data);
-                    }
+        const width = 600;
+        const height = 400;
+        const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+        const svg = d3.select("#scatter-plot").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+          .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        const x = d3.scaleLinear()
+            .range([0, width - margin.left - margin.right]);
+
+        const y = d3.scaleLinear()
+            .range([height - margin.top - margin.bottom, 0]);
+        const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        const xAxis = svg.append("g")
+            .attr("class", "x-axis")
+            .attr("transform", `translate(0,${height - margin.top - margin.bottom})`);
+
+        const yAxis = svg.append("g")
+            .attr("class", "y-axis");
+        // X gridlines
+        svg.append("g")
+            .attr("class", "grid")
+            .attr("transform", `translate(0,${height - margin.top - margin.bottom})`)
+            .call(d3.axisBottom(x)
+                .ticks(10)
+                .tickSize(-height + margin.top + margin.bottom)
+                .tickFormat('')
+            );
+        // Y gridlines
+        svg.append("g")
+            .attr("class", "grid")
+            .call(d3.axisLeft(y)
+                .ticks(10)
+                .tickSize(-width + margin.left + margin.right)
+                .tickFormat('')
+            );
+
+        // data from file
+        d3.csv("data/cereals.csv").then(data => {
+            data.forEach(d => {
+                d.Calories = +d.Calories;
+                d.Sugars = +d.Sugars;
+            });
+
+            x.domain([0, d3.max(data, d => d.Calories)]).nice();
+            y.domain([-2, d3.max(data, d => d.Sugars)]).nice();
+
+            xAxis.call(d3.axisBottom(x));
+            yAxis.call(d3.axisLeft(y));
+
+            //  labels
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("x", (width - margin.left - margin.right) / 2)
+                .attr("y", height - margin.top - margin.bottom + 40)
+                .attr("text-anchor", "middle")
+                .text("Calories");
+
+            svg.append("text")
+                .attr("class", "axis-label")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -((height - margin.top - margin.bottom) / 2))
+                .attr("y", -margin.left + 20)
+                .attr("text-anchor", "middle")
+                .text("Sugars");
+
+            const tooltip = d3.select(".tooltip");
+
+            svg.selectAll(".dot")
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("r", 5)
+                .attr("cx", d => x(d.Calories))
+                .attr("cy", d => y(d.Sugars))
+                .style("fill", d => color(d.Cereal))
+                .on("mouseover", function(event, d) {
+                    tooltip.transition().duration(200).style("opacity", .9);
+                    tooltip.html(`Cereal: ${d.Cereal}<br>Calories: ${d.Calories}<br>Sugars: ${d.Sugars}`)
+                        .style("left", `${event.pageX + 5}px`)
+                        .style("top", `${event.pageY - 28}px`);
+                })
+                .on("mouseout", function() {
+                    tooltip.transition().duration(500).style("opacity", 0);
                 });
-            })
-            .catch(error => console.error('Error loading CSV:', error));
-
-        function createScatterPlot(data) {
-            const ctx = document.getElementById('scatterPlot').getContext('2d');
-
-            const scatterData = data.map(row => ({
-                x: parseFloat(row.Calories),
-                y: parseFloat(row.Sugars),
-                label: row.Cereal // Include cereal name in data
-            }));
-
-            const config = {
-                type: 'scatter',
-                data: {
-                    datasets: [{
-                        label: 'Cereal Data',
-                        data: scatterData,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1,
-                        pointRadius: 5
-                    }]
-                },
-                options: {
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(tooltipItem) {
-                                    // Show cereal name along with Calories and Sugars
-                                    const dataPoint = tooltipItem.raw;
-                                    return `${dataPoint.label}: Calories: ${dataPoint.x}, Sugars: ${dataPoint.y}`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            type: 'linear',
-                            position: 'bottom',
-                            title: {
-                                display: true,
-                                text: 'Calories'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Sugars'
-                            }
-                        }
-                    }
-                }
-            };
-
-            new Chart(ctx, config);
-        }
+        }).catch(error => {
+            console.error('Error loading the CSV file:', error);
+        });
     </script>
 </body>
 </html>

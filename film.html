@@ -2,44 +2,22 @@
 <html>
 <head>
     <title>Movie Genre Distribution Pie Chart</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
     <style>
-            body {
-                font-family: 'Times New Roman', serif;
-                text-align: center;
-            }
-            h1 {
-                margin-bottom: 20px;
-            }
-            .button {
-                display: inline-block;
-                padding: 10px 20px;
-                margin: 10px;
-                text-decoration: none;
-                color: black;
-                background-color: #D8A8D8;
-                border-radius: 5px;
-                border: none;
-                font-size: 16px;
-                cursor: pointer;
-            }
-            .button:hover {
-                background-color: #0056b3;
-            }
         canvas {
-            margin-top: 20px;
-            width: 500px !important;
-            height: 500px !important;
+            width: 100%;
+            max-width: 550px;
+            height: auto;
         }
-
-
     </style>
 </head>
 <body>
-    <h1>  Film Chart</h1>
-    <a href="index.html" class="button">  Home</a>
-    <canvas id="genrePieChart" width="100" height="100"></canvas>
+    <h1>Film Chart</h1>
+    <a href="index.html" class="button">Home</a>
+    <h4 style="text-align: left;">The Film Pie Chart visualization illustrates the proportion of films distributed across various categories. Interactive navigation provides information on the number of films within each specific category. Each category is represented by a distinct color for better visualization.</h4>
+    <canvas id="genrePieChart"></canvas>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('genrePieChart').getContext('2d');
@@ -51,24 +29,17 @@
                         label: 'Movie Genres',
                         data: [],
                         backgroundColor: [
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(255, 206, 86, 0.2)',
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(153, 102, 255, 0.2)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)'
-                        ],
-                        borderWidth: 1
+                            'rgb(255, 99, 132)',
+                            'rgb(54, 162, 235)',
+                            'rgb(255, 206, 86)',
+                            'rgb(75, 192, 192)',
+                            'rgb(153, 102, 255)'
+                        ]
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: true,
                     plugins: {
                         legend: {
                             position: 'top',
@@ -88,8 +59,6 @@
                     }
                 }
             });
-
-            // Fetch and Parse CSV
             fetch('data/film.csv')
                 .then(response => response.text())
                 .then(text => {
@@ -106,7 +75,6 @@
                                     genreCount[genre] = 1;
                                 }
                             });
-
                             genrePieChart.data.labels = Object.keys(genreCount);
                             genrePieChart.data.datasets[0].data = Object.values(genreCount);
                             genrePieChart.update();

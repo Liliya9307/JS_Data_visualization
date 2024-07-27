@@ -3,53 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <title>Cars Horsepower Heatmap</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body {
-            font-family: 'Times New Roman', serif;
-            text-align: center;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 10px;
-            text-decoration: none;
-            color: black;
-            background-color: #D8A8D8;
-            border-radius: 5px;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #D8A8D8;
-        }
-        .tooltip {
-            position: absolute;
-            text-align: left;
-            padding: 5px;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            pointer-events: none;
-            box-shadow: 0px 0px 5px rgba(0,0,0,0.2);
-        }
-        svg {
-            margin-top: 20px;
-            width: 100%; /* Make SVG responsive */
-            height: auto;
-        }
-        .legend {
-            margin-top: 20px;
-        }
-        .color-boxes {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 5px;
-        }
         .color-box {
             width: 30px;
             height: 30px;
@@ -65,49 +21,32 @@
             margin: 0 10px;
             font-size: 14px;
         }
-        .color-box-tooltip {
+        #tooltip {
             position: absolute;
-            background: #fff;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            padding: 5px;
-            box-shadow: 0px 0px 5px rgba(0,0,0,0.2);
-            opacity: 0;
+            background: white;
+            border: 1px solid black;
+            border-radius: 4px;
+            padding: 10px;
             pointer-events: none;
-            top: 35px;
-            left: 0;
-            white-space: nowrap;
-        }
-        .color-box:hover .color-box-tooltip {
-            opacity: 1;
-        }
-        .axis-label {
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 12px;
+            box-shadow: 0px 0px 5px rgba(0,0,0,0.2);
+            display: none; /* Hide tooltip by default */
         }
     </style>
 </head>
 <body>
     <h1>Cars Horsepower Heatmap</h1>
     <a href="index.html" class="button">Home</a>
-    <div id="tooltip" class="tooltip" style="opacity: 0;"></div>
+    <h4 style="text-align: left;"> The Horsepower Heat Map provides information about car models and their horsepower, categorized by year. This visualization allows users to see which cars are the most and least powerful within each year. The interactive mode offers more detailed information about each model. The color gradient helps to differentiate power levels, with dark blue indicating the most powerful cars and red indicating the least powerful.   </h4>
+
+    <div id="tooltip"></div>
     <div class="legend">
         <div class="color-boxes">
-            <div class="color-box" style="background-color: black;">
-                <div class="color-box-tooltip">High</div>
-            </div>
-            <div class="color-box" style="background-color: lightblue;">
-                <div class="color-box-tooltip">Moderate</div>
-            </div>
-            <div class="color-box" style="background-color: lightgreen;">
-                <div class="color-box-tooltip">Low</div>
-            </div>
-            <div class="color-box" style="background-color: yellow;">
-                <div class="color-box-tooltip">Very Low</div>
-            </div>
-            <div class="color-box" style="background-color: red;">
-                <div class="color-box-tooltip">Minimal</div>
-            </div>
+            <div class="color-box" style="background-color: darkblue;"></div>
+            <div class="color-box" style="background-color: lightblue;"></div>
+            <div class="color-box" style="background-color: lightgreen;"></div>
+            <div class="color-box" style="background-color: yellow;"></div>
+            <div class="color-box" style="background-color: red;"></div>
         </div>
         <div class="description">
             <div>High</div>
@@ -119,28 +58,23 @@
     </div>
     <svg></svg>
     <script>
-        // Load and parse the CSV file
         d3.csv("data/cars.csv").then(data => {
-            // Convert values to numbers
+            console.log("Parsed Data:", data);
             data.forEach(d => {
                 d.Horsepower = +d.Horsepower;
                 d['Model Year'] = +d['Model Year'];
             });
-
-            // Set up dimensions and margins
             const margin = {top: 20, right: 30, bottom: 60, left: 60};
             const width = 800 - margin.left - margin.right;
             const height = 500 - margin.top - margin.bottom;
             const cellSize = 20; // Size of each cell in the heatmap
 
-            // Create SVG container
             const svg = d3.select("svg")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
                 .attr("transform", `translate(${margin.left},${margin.top})`);
 
-            // Set up scales
             const x = d3.scaleLinear()
                 .domain(d3.extent(data, d => d['Model Year']))
                 .range([0, width]);
@@ -152,7 +86,6 @@
             const color = d3.scaleSequential(d3.interpolateRdYlBu)
                 .domain(d3.extent(data, d => d.Horsepower));
 
-            // Create a grid of cells
             svg.selectAll("rect")
                 .data(data)
                 .enter()
@@ -164,17 +97,16 @@
                 .attr("fill", d => color(d.Horsepower))
                 .on("mouseover", (event, d) => {
                     d3.select("#tooltip")
-                        .transition().duration(200).style("opacity", .9)
-                        .html(`Model: ${d.Model}<br>Model Year: ${d['Model Year']}<br>Horsepower: ${d.Horsepower}`)
-                        .style("left", (event.pageX + 5) + "px")
+                        .style("display", "block")
+                        .html(`Model: ${d.Car}<br>Manufacturer: ${d.Manufacturer}<br>Model Year: ${d['Model Year']}<br>Horsepower: ${d.Horsepower}`)
+                        .style("left", (event.pageX + 10) + "px")
                         .style("top", (event.pageY - 28) + "px");
                 })
                 .on("mouseout", () => {
                     d3.select("#tooltip")
-                        .transition().duration(500).style("opacity", 0);
+                        .style("display", "none");
                 });
 
-            // Add x-axis
             const xAxis = svg.append("g")
                 .attr("class", "x-axis")
                 .attr("transform", `translate(0,${height})`)
@@ -183,7 +115,6 @@
                 .attr("stroke", "#ddd")
                 .attr("stroke-width", "1px");
 
-            // Add y-axis
             const yAxis = svg.append("g")
                 .attr("class", "y-axis")
                 .call(d3.axisLeft(y).ticks(10))
@@ -191,7 +122,7 @@
                 .attr("stroke", "#ddd")
                 .attr("stroke-width", "1px");
 
-            // Add x-axis label
+            // label
             svg.append("text")
                 .attr("class", "axis-label")
                 .attr("x", width / 2)
@@ -199,7 +130,7 @@
                 .style("text-anchor", "middle")
                 .text("Model Year");
 
-            // Add y-axis label
+            // label
             svg.append("text")
                 .attr("class", "axis-label")
                 .attr("x", -margin.left - 150)

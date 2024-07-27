@@ -4,48 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Line Chart Visualization</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <style>
-        body {
-            font-family: 'Times New Roman', serif;
-            text-align: center;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        .button {
-            display: inline-block;
-            padding: 10px 20px;
-            margin: 10px;
-            text-decoration: none;
-            color: black;
-            background-color: #D8A8D8;
-            border-radius: 5px;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #0056b3;
-        }
-        canvas {
-            margin-top: 20px;
-            width: 700px !important;
-            height: 500px !important;
-        }
-        .line {
-            fill: none;
-            stroke-width: 2px;
-        }
-        .axis-label {
-            font-size: 12px;
-        }
-    </style>
 </head>
 <body>
     <h1>Grocery Store Chart</h1>
     <a href="index.html" class="button">Home</a>
+    <h4 style="text-align: left;">
+        The Grocery Store Chart displays the revenue for each branch of the store. Users can see the contribution of each branch to the overall revenue. Interactive features provide detailed information on the total amount of purchases made at each branch.   </h4>
     <div id="line-chart"></div>
+    <div class="tooltip" id="tooltip"></div>
     <script>
         const margin = { top: 20, right: 30, bottom: 50, left: 50 };
         const width = 800 - margin.left - margin.right;
@@ -76,13 +44,11 @@
                 .nice()
                 .range([height, 0]);
 
-            // X axis
             svg.append("g")
                 .attr("class", "x-axis")
                 .attr("transform", `translate(0,${height})`)
                 .call(d3.axisBottom(x).tickSize(0));
 
-            // X axis label
             svg.append("text")
                 .attr("class", "axis-label")
                 .attr("x", width / 2)
@@ -90,12 +56,11 @@
                 .attr("text-anchor", "middle")
                 .text("Chain");
 
-            // Y axis
             svg.append("g")
                 .attr("class", "y-axis")
                 .call(d3.axisLeft(y).ticks(10));
 
-            // Y axis label
+            // label
             svg.append("text")
                 .attr("class", "axis-label")
                 .attr("x", -height / 2)
@@ -112,7 +77,9 @@
                 .data([chainData])
                 .attr("class", "line")
                 .attr("d", line)
-                .style("stroke", "#69b3a2");
+                .style("stroke", "#000000");
+
+            const tooltip = d3.select("#tooltip");
 
             svg.selectAll("dot")
                 .data(chainData)
@@ -121,7 +88,20 @@
                 .attr("cx", d => x(d.Chain) + x.bandwidth() / 2)
                 .attr("cy", d => y(d.PurchaseAmount))
                 .attr("r", 5)
-                .style("fill", "#69b3a2");
+                .style("fill", "#69b3a2")
+                .on("mouseover", (event, d) => {
+                    tooltip.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    tooltip.html(`Chain: ${d.Chain}<br>Amount: ${d.PurchaseAmount.toFixed(2)}`)
+                        .style("left", (event.pageX) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", d => {
+                    tooltip.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                });
         }).catch(error => {
             console.error('Error loading or processing the data:', error);
         });
