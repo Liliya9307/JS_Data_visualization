@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cereal Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            text-decoration: none;
+            color: black;
+            background-color: #D8A8D8;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        canvas {
+            margin-top: 20px;
+            width: 700px !important;
+            height: 500px !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cereal Chart</h1>
+    <a href="index.html" class="button">Home</a>
+
+    <canvas id="scatterPlot" width="600" height="400"></canvas>
+
+    <script>
+        // Load the CSV file and create the scatter plot
+        fetch('data/cereals.csv')
+            .then(response => response.text())
+            .then(csvText => {
+                Papa.parse(csvText, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: function (results) {
+                        createScatterPlot(results.data);
+                    }
+                });
+            })
+            .catch(error => console.error('Error loading CSV:', error));
+
+        function createScatterPlot(data) {
+            const ctx = document.getElementById('scatterPlot').getContext('2d');
+
+            const scatterData = data.map(row => ({
+                x: parseFloat(row.Calories),
+                y: parseFloat(row.Sugars),
+                label: row.Cereal // Include cereal name in data
+            }));
+
+            const config = {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Cereal Data',
+                        data: scatterData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    // Show cereal name along with Calories and Sugars
+                                    const dataPoint = tooltipItem.raw;
+                                    return `${dataPoint.label}: Calories: ${dataPoint.x}, Sugars: ${dataPoint.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: {
+                                display: true,
+                                text: 'Calories'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Sugars'
+                            }
+                        }
+                    }
+                }
+            };
+
+            new Chart(ctx, config);
+        }
+    </script>
+</body>
+</html>
